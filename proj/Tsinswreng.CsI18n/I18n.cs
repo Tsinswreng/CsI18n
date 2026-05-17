@@ -1,6 +1,6 @@
 namespace Tsinswreng.CsI18n;
 
-using Jeffijoe.MessageFormat;
+using System.Globalization;
 using Tsinswreng.CsCfg;
 
 public class I18n:II18n{
@@ -10,7 +10,6 @@ public class I18n:II18n{
 	}
 	public I18n(){}
 	public ICfgAccessor? CfgAccessor{get;set;}
-	MessageFormatter MsgFmt = new();
 	public OnKeyNotFound? OnKeyNotFound{get;set;} = (Self, Key, Args)=>{
 		return Key.GetFullPathSegs().Last();
 	};
@@ -25,15 +24,28 @@ public class I18n:II18n{
 			if(Args.Length == 0){
 				return Template;
 			}else{
-				var ArgDict = new Dictionary<str, obj?>();
-				for(var i = 0; i < Args.Length; i++){
-					ArgDict[i+""] = i;
-				}
-				return MsgFmt.FormatMessage(Template, ArgDict);
+				return FormatTemplate(Template, Args);
 			}
 		}
 		//TODO handle Dict {type: "xxx", data: ""}
 		throw new NotSupportedException();
+	}
+
+	/// <summary>
+	/// 在 invariant globalization 模式下避免創建具體 CultureInfo。
+	/// 語言資源目前使用的是標準 {0}/{1} 佔位符，因此直接走 composite formatting。
+	/// </summary>
+	protected virtual str FormatTemplate(str Template, obj[] Args){
+		try{
+			return string.Format(CultureInfo.InvariantCulture, Template, Args);
+		}catch(FormatException){
+			// 模板若寫錯，退回簡單替換，避免整個 UI 因提示文字崩潰。
+			var ans = Template;
+			for(var i = 0; i < Args.Length; i++){
+				ans = ans.Replace("{"+i+"}", Args[i]?.ToString() ?? "");
+			}
+			return ans;
+		}
 	}
 
 	public str this[II18nKey Key]{get{
