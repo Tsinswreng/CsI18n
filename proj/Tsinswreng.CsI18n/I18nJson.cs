@@ -9,7 +9,7 @@ using Tsinswreng.CsCore;
 語言包 JSON 的讀／寫。
 
 *讀*：把（可嵌套的）JSON 攤平成「鍵 → 模板」。嵌套路徑段用 `/` 連接
-（與 {{nameof(I18nEntry.BuildKeyStr)}} 一致），
+（即 {{nameof(I18nDict.KeySep)}}，與 {{nameof(I18nDict.Get)}} 拼字典鍵的方式一致），
 故 `{ "View": { "Common": { "Login": "登錄" } } }` 變成 `View/Common/Login → 登錄`。
 
 *寫*：給「構建期生成語言包」用——譯文照舊寫在 C\#（鍵受編譯檢查），
@@ -104,7 +104,7 @@ public static class I18nJson {
 					break;
 				case JsonValue Value:
 					if (Value.TryGetValue<str>(out var Text)) {
-						Out[str.Join("/", Cur)] = Text;
+						Out[str.Join(I18nDict.KeySep, Cur)] = Text;
 					}
 					break;
 			}

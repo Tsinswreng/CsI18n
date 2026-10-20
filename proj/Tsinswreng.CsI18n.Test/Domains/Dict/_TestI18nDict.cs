@@ -6,7 +6,7 @@ namespace Tsinswreng.CsI18n.Test.Domains.Dict;
 [Doc($$"""
 #Sum[{{nameof(I18nDict)}} 的測試類。]
 #Descr[
-一個測試類對應一個被測類；不同被測成員（`Get`、`Mk`、`FromMap`、`Formatter`）
+一個測試類對應一個被測類；不同被測成員（`Get`、`FromMap`、`Formatter`）
 的用例拆到同目錄的其他文件。
 ]
 """)]
@@ -21,7 +21,6 @@ public partial class TestI18nDict : ITester {
 		Node ??= new TestNode();
 		Node.Ordered = false;
 		RegisterGet(Node);
-		RegisterMk(Node);
 		RegisterFromMap(Node);
 		RegisterFormatter(Node);
 		return Node;

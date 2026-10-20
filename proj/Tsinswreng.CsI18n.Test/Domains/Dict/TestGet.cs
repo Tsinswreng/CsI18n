@@ -22,7 +22,7 @@ public partial class TestI18nDict {
 
 		R("命中且無參數：原樣返回模板", async Arg => {
 			var Key = I18nKey.Mk(null, ["Login"]);
-			var Dict = I18nDict.Mk([new I18nEntry(Key, "登錄")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Login"] = "登錄" });
 			var Text = Dict.Get(Key);
 			T(Text == "登錄", $"期望 登錄，實際 {Text}");
 			return NIL;
@@ -32,7 +32,7 @@ public partial class TestI18nDict {
 			// 無參數短路是刻意的：讓自訂格式化引擎不必處理空參數，
 			// 也讓「就想原樣顯示帶大括號的文案」這種情況成立。
 			var Key = I18nKey.Mk(null, ["Raw"]);
-			var Dict = I18nDict.Mk([new I18nEntry(Key, "a{0}b")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Raw"] = "a{0}b" });
 			var Text = Dict.Get(Key);
 			T(Text == "a{0}b", $"期望 a{{0}}b，實際 {Text}");
 			return NIL;
@@ -40,7 +40,7 @@ public partial class TestI18nDict {
 
 		R("有參數時按位置填入", async Arg => {
 			var Key = I18nKey.Mk(null, ["Greet"]);
-			var Dict = I18nDict.Mk([new I18nEntry(Key, "你好，{0}")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Greet"] = "你好，{0}" });
 			var Text = Dict.Get(Key, "小明");
 			T(Text == "你好，小明", $"期望 你好，小明，實際 {Text}");
 			return NIL;
@@ -48,7 +48,7 @@ public partial class TestI18nDict {
 
 		R("多個位置參數按次序填入", async Arg => {
 			var Key = I18nKey.Mk(null, ["Range"]);
-			var Dict = I18nDict.Mk([new I18nEntry(Key, "從 {0} 到 {1}")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Range"] = "從 {0} 到 {1}" });
 			var Text = Dict.Get(Key, "一月", "三月");
 			T(Text == "從 一月 到 三月", $"實際 {Text}");
 			return NIL;
@@ -56,7 +56,7 @@ public partial class TestI18nDict {
 
 		R("未命中：默認回鍵的全路徑", async Arg => {
 			// 漏翻的鍵要能在界面上直接看出來，而不是顯示空白。
-			var Dict = I18nDict.Mk([new I18nEntry(I18nKey.Mk(null, ["Login"]), "登錄")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Login"] = "登錄" });
 			var Missing = I18nKey.Mk(null, ["Missing"]);
 			var Text = Dict.Get(Missing);
 			T(Text == "Missing", $"期望 Missing，實際 {Text}");
@@ -64,7 +64,7 @@ public partial class TestI18nDict {
 		});
 
 		R("未命中的嵌套鍵：回父先子後的全路徑", async Arg => {
-			var Dict = I18nDict.Mk([new I18nEntry(I18nKey.Mk(null, ["Login"]), "登錄")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Login"] = "登錄" });
 			var Parent = I18nKey.Mk(null, ["View"]);
 			var Missing = I18nKey.Mk(Parent, ["Nope"]);
 			var Text = Dict.Get(Missing);
@@ -72,8 +72,21 @@ public partial class TestI18nDict {
 			return NIL;
 		});
 
+		R("查表的分隔符固定用斜線，不隨鍵自己的 PathSep", async Arg => {
+			// 同一個字典要同時容納「平鋪的界面文案鍵」與「樹狀的錯誤鍵」；
+			// 若沿用各節點自己的 PathSep，同一條譯文就會有兩種寫法。
+			var Key = new I18nKey {
+				RelaPathSegs = ["View", "Login"],
+				PathSep = ".",
+			};
+			T(Key.BuildFullPath() == "View.Login", "前置條件：鍵自己的分隔符是點");
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["View/Login"] = "登錄" });
+			T(Dict.Get(Key) == "登錄", $"期望命中 View/Login，實際 {Dict.Get(Key)}");
+			return NIL;
+		});
+
 		R("可換掉未命中的兜底", async Arg => {
-			var Dict = I18nDict.Mk([new I18nEntry(I18nKey.Mk(null, ["Login"]), "登錄")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Login"] = "登錄" });
 			var Missing = I18nKey.Mk(null, ["Missing"]);
 			IKeyNode? SeenKey = null;
 			obj?[]? SeenArgs = null;
@@ -92,7 +105,7 @@ public partial class TestI18nDict {
 
 		R("索引器等價於無參數 Get", async Arg => {
 			var Key = I18nKey.Mk(null, ["Login"]);
-			var Dict = I18nDict.Mk([new I18nEntry(Key, "登錄")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Login"] = "登錄" });
 			T(Dict[Key] == Dict.Get(Key));
 			T(Dict[Key] == "登錄");
 			return NIL;

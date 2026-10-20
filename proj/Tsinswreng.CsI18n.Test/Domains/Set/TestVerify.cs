@@ -24,8 +24,8 @@ public partial class TestI18nSet {
 		R("每個語言都翻齊：零問題", async Arg => {
 			var Login = I18nKey.Mk(null, ["Login"]);
 			var Set = new I18nSet()
-				.AddLang("zh-CN", [new I18nEntry(Login, "登錄")])
-				.AddLang("en", [new I18nEntry(Login, "Logged in")]);
+				.AddLang("zh-CN", new Dictionary<str, str> { ["Login"] = "登錄" })
+				.AddLang("en", new Dictionary<str, str> { ["Login"] = "Logged in" });
 			var Problems = Set.Verify([Login]);
 			T(Problems.Count == 0, $"期望零問題，實際 {Problems.Count}：{str.Join(" | ", Problems)}");
 			return NIL;
@@ -35,11 +35,11 @@ public partial class TestI18nSet {
 			var Login = I18nKey.Mk(null, ["Login"]);
 			var Logout = I18nKey.Mk(null, ["Logout"]);
 			var Set = new I18nSet()
-				.AddLang("zh-CN", [
-					new I18nEntry(Login, "登錄"),
-					new I18nEntry(Logout, "退出登錄"),
-				])
-				.AddLang("en", [new I18nEntry(Login, "Logged in")]);
+				.AddLang("zh-CN", new Dictionary<str, str> {
+					["Login"] = "登錄",
+					["Logout"] = "退出登錄",
+				})
+				.AddLang("en", new Dictionary<str, str> { ["Login"] = "Logged in" });
 			var Problems = Set.Verify([Login, Logout]);
 			T(Problems.Count == 1, $"期望一個問題，實際 {Problems.Count}：{str.Join(" | ", Problems)}");
 			// 只有 en 缺 Logout；信息要能直接定位到「哪個語言的哪個鍵」。
@@ -53,8 +53,8 @@ public partial class TestI18nSet {
 			// 翻成空白的鍵在界面上等於沒翻，故不能只看「鍵在不在」。
 			var Login = I18nKey.Mk(null, ["Login"]);
 			var Set = new I18nSet()
-				.AddLang("zh-CN", [new I18nEntry(Login, "登錄")])
-				.AddLang("en", [new I18nEntry(Login, "   ")]);
+				.AddLang("zh-CN", new Dictionary<str, str> { ["Login"] = "登錄" })
+				.AddLang("en", new Dictionary<str, str> { ["Login"] = "   " });
 			var Problems = Set.Verify([Login]);
 			T(Problems.Count == 1, $"期望一個問題，實際 {Problems.Count}");
 			T(Problems[0].Contains("譯文為空"), $"信息應說明是空譯文：{Problems[0]}");
@@ -65,10 +65,10 @@ public partial class TestI18nSet {
 			// 允許字典比必需鍵多：例如錯誤文案不必列入界面文案的必需鍵。
 			var Login = I18nKey.Mk(null, ["Login"]);
 			var Extra = I18nKey.Mk(null, ["NotRequired"]);
-			var Set = new I18nSet().AddLang("zh-CN", [
-				new I18nEntry(Login, "登錄"),
-				new I18nEntry(Extra, "多餘的"),
-			]);
+			var Set = new I18nSet().AddLang("zh-CN", new Dictionary<str, str> {
+				["Login"] = "登錄",
+				["NotRequired"] = "多餘的",
+			});
 			var Problems = Set.Verify([Login]);
 			T(Problems.Count == 0, $"期望零問題，實際 {Problems.Count}：{str.Join(" | ", Problems)}");
 			return NIL;
@@ -78,7 +78,7 @@ public partial class TestI18nSet {
 			// 界面文案一組、錯誤文案一組，兩組都要覆蓋到。
 			var Login = I18nKey.Mk(null, ["Login"]);
 			var ErrKey = I18nKey.Mk(null, ["Error", "NotLogin"]);
-			var Set = new I18nSet().AddLang("zh-CN", [new I18nEntry(Login, "登錄")]);
+			var Set = new I18nSet().AddLang("zh-CN", new Dictionary<str, str> { ["Login"] = "登錄" });
 			var Problems = Set.Verify([Login], [ErrKey]);
 			T(Problems.Count == 1, $"期望一個問題，實際 {Problems.Count}");
 			T(Problems[0].Contains("缺少文案"), $"應報缺譯：{Problems[0]}");

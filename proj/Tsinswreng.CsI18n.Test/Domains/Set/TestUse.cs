@@ -30,8 +30,8 @@ public partial class TestI18nSet {
 		R("首次取當前語言即切到默認語言", async Arg => {
 			var Key = I18nKey.Mk(null, ["Login"]);
 			var Set = new I18nSet()
-				.AddLang("zh-CN", [new I18nEntry(Key, "登錄")])
-				.AddLang("en", [new I18nEntry(Key, "Logged in")]);
+				.AddLang("zh-CN", new Dictionary<str, str> { ["Login"] = "登錄" })
+				.AddLang("en", new Dictionary<str, str> { ["Login"] = "Logged in" });
 			// 還沒 Use 過，故 Cur 應是默認語言，而不是最後加入的 en。
 			T(Set.Cur.Get(Key) == "登錄");
 			return NIL;
@@ -40,8 +40,8 @@ public partial class TestI18nSet {
 		R("切換後當前語言跟着變", async Arg => {
 			var Key = I18nKey.Mk(null, ["Login"]);
 			var Set = new I18nSet()
-				.AddLang("zh-CN", [new I18nEntry(Key, "登錄")])
-				.AddLang("en", [new I18nEntry(Key, "Logged in")]);
+				.AddLang("zh-CN", new Dictionary<str, str> { ["Login"] = "登錄" })
+				.AddLang("en", new Dictionary<str, str> { ["Login"] = "Logged in" });
 			var EnDict = Set.Use("en");
 			T(EnDict.Get(Key) == "Logged in");
 			T(Set.Cur.Get(Key) == "Logged in");

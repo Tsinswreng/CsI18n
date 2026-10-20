@@ -22,7 +22,7 @@ public partial class TestI18nDict {
 		R("默認引擎是 ICU", async Arg => {
 			// 默認必須是 ICU：複數這類規則才有地方放。
 			var Key = I18nKey.Mk(null, ["Files__"]);
-			var Dict = I18nDict.Mk([new I18nEntry(Key, "{0, plural, one {# file} other {# files}}")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Files__"] = "{0, plural, one {# file} other {# files}}" });
 			T(Dict.Formatter is IcuFormatter, $"期望 ICU 引擎，實際 {Dict.Formatter.GetType().Name}");
 			var One = Dict.Get(Key, 1);
 			var Many = Dict.Get(Key, 3);
@@ -32,7 +32,7 @@ public partial class TestI18nDict {
 		});
 		R("有參數時改用自訂引擎", async Arg => {
 			var Key = I18nKey.Mk(null, ["Greet"]);
-			var Dict = I18nDict.Mk([new I18nEntry(Key, "你好，{0}")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Greet"] = "你好，{0}" });
 			var Recorder = new RecordingFormatter();
 			Dict.Formatter = Recorder;
 			var Text = Dict.Get(Key, "小明");
@@ -47,7 +47,7 @@ public partial class TestI18nDict {
 		R("無參數時不驚動自訂引擎", async Arg => {
 			// 無參數短路：引擎可能很貴（ICU），也可能不喜歡空參數。
 			var Key = I18nKey.Mk(null, ["Greet"]);
-			var Dict = I18nDict.Mk([new I18nEntry(Key, "你好，{0}")]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str> { ["Greet"] = "你好，{0}" });
 			var Recorder = new RecordingFormatter();
 			Dict.Formatter = Recorder;
 			var Text = Dict.Get(Key);
@@ -58,7 +58,7 @@ public partial class TestI18nDict {
 
 		R("未命中時不驚動自訂引擎", async Arg => {
 			// 兜底是 OnKeyNotFound 的事，與格式化無關。
-			var Dict = I18nDict.Mk([]);
+			var Dict = I18nDict.FromMap(new Dictionary<str, str>());
 			var Recorder = new RecordingFormatter();
 			Dict.Formatter = Recorder;
 			var Key = I18nKey.Mk(null, ["Missing"]);

@@ -22,7 +22,7 @@ public static class Chk {
 	#Eg[
 	```cs
 	var T = Assert.IsTrue;
-	T(Chk.Throws<InvalidOperationException>(() => I18nDict.Mk(Entries)));
+	T(Chk.Throws<ArgumentException>(() => Set.Use("ja")));
 	```
 	]
 	""")]

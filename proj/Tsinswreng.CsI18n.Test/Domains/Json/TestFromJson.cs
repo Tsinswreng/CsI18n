@@ -32,7 +32,7 @@ public partial class TestI18nJson {
 		});
 
 		R("嵌套物件：路徑段用斜線連接", async Arg => {
-			// 這條規則必須與 I18nEntry.BuildKeyStr 一致，否則 C# 那套鍵查不到 JSON 這套譯文。
+			// 這條規則必須與 I18nDict.KeySep 一致，否則 C# 那套鍵查不到 JSON 這套譯文。
 			var Map = I18nJson.FromJson("""
 				{ "View": { "Common": { "Login": "登錄" } } }
 				""");

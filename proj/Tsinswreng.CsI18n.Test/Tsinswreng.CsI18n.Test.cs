@@ -2,7 +2,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Tsinswreng.CsCore;
 using Tsinswreng.CsTreeTest;
 using Tsinswreng.CsI18n.Test.Domains.Dict;
-using Tsinswreng.CsI18n.Test.Domains.Entry;
 using Tsinswreng.CsI18n.Test.Domains.ExampleUsage;
 using Tsinswreng.CsI18n.Test.Domains.Formatter.Icu;
 using Tsinswreng.CsI18n.Test.Domains.Json;
@@ -33,7 +32,6 @@ public static class Program {
 		// 每個測試類都是無參構造，登記成 Transient 只是讓容器能解析到；
 		// 若框架走的是 `new T()` 這條路，這些登記也不會有害。
 		SvcColct.AddTransient<TestI18nKey>();
-		SvcColct.AddTransient<TestI18nEntry>();
 		SvcColct.AddTransient<TestI18nDict>();
 		SvcColct.AddTransient<TestIcuFormatter>();
 		SvcColct.AddTransient<TestI18nSet>();

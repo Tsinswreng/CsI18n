@@ -98,10 +98,27 @@ public static class KeysErr {
 	];
 }
 
+[Doc($$"""
+#Sum[應用自己定義的「譯文條目」型別。]
+#Descr[
+*這型別為甚麼在應用這一側而不是在 {{nameof(I18nSet)}} 裏*：本庫只認最終形態
+「鍵 → 模板」（見 {{nameof(I18nDict.FromMap)}}）；譯文要怎麼宣告是應用的事。
+應用把它寫成 `record`，好處是宣告時仍引用鍵物件（改名即編譯錯），
+而交出去時只給庫一張表。
+
+*鍵字符串只在要交出去時才算*：{{nameof(KeyStr)}} 是計算屬性，
+故它與 {{nameof(Key)}} 不可能不同步。
+]
+""")]
+public record MsgEntry(IKeyNode Key, str Text) {
+	[Doc($"字典鍵：父鏈路徑段用 {nameof(I18nDict.KeySep)} 連接。")]
+	public str KeyStr => Key.BuildFullPath(I18nDict.KeySep);
+}
+
 [Doc("簡體中文譯文。每條都是 `new(鍵物件, 模板)`，故鍵改名時這裏編譯不過。")]
 public static class MsgZhCn {
 	[Doc("本語言的全部條目。")]
-	public static IList<I18nEntry> Entries = [
+	public static IList<MsgEntry> Entries = [
 		new(KeysI18n.AppTitle, "示例應用"),
 		new(KeysI18n.Login, "登錄"),
 		new(KeysI18n.Logout, "退出登錄"),
@@ -115,7 +132,7 @@ public static class MsgZhCn {
 [Doc("英文譯文。條目與中文一一對應——缺一條 {{nameof(I18nSet.Verify)}} 就會報出來。")]
 public static class MsgEn {
 	[Doc("本語言的全部條目。")]
-	public static IList<I18nEntry> Entries = [
+	public static IList<MsgEntry> Entries = [
 		new(KeysI18n.AppTitle, "Example App"),
 		new(KeysI18n.Login, "Log in"),
 		new(KeysI18n.Logout, "Log out"),
@@ -145,8 +162,26 @@ public static class AppI18n {
 
 	[Doc("全部語言。")]
 	public static I18nSet Set = new I18nSet { DfltLang = DfltLang }
-		.AddLang("zh-CN", MsgZhCn.Entries)
-		.AddLang("en", MsgEn.Entries);
+		.AddLang("zh-CN", ToMap(MsgZhCn.Entries))
+		.AddLang("en", ToMap(MsgEn.Entries));
+
+	[Doc($$"""
+	#Sum[把應用自己的條目攤成「鍵 → 模板」。]
+	#Descr[
+	*這一步是應用側的職責*：庫只認「鍵 → 模板」，故由應用決定鍵怎麼算
+	（此處固定用 {{nameof(I18nDict.KeySep)}}，與庫查表時一致）。
+	重複鍵在 `Dictionary.Add` 這一步就會拋——那 API 的既有行為，不必自己再檢查一次。
+	]
+	#Prm[{{nameof(Entries)}}][某個語言的條目。]
+	#Rtn[鍵 → 模板。]
+	""")]
+	static IDictionary<str, str> ToMap(IEnumerable<MsgEntry> Entries) {
+		var R = new Dictionary<str, str>();
+		foreach (var Entry in Entries) {
+			R.Add(Entry.KeyStr, Entry.Text);
+		}
+		return R;
+	}
 
 	[Doc("當前語言的門面；業務代碼取文案一律走它。")]
 	public static II18n Inst {

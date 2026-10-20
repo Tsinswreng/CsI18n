@@ -52,7 +52,7 @@ public partial class TestExampleUsage {
 			// 錯誤鍵由 CsErr 造（鍵樹上的一段路徑，例如 Error/User/...），不必再立一份「錯誤文案鍵」。
 			// 拋的時候帶參數，前端拿 Err.Type 當鍵、Err.Args 當參數，直接翻出給用戶看的句子。
 			var Err = KeysErr.User.PasswordNotMatch.ToErr();
-			var ErrKeyStr = I18nEntry.BuildKeyStr(Err.Type);
+			var ErrKeyStr = Err.Type.BuildFullPath(I18nDict.KeySep);
 			T(ErrKeyStr == "Error/User/PasswordNotMatch", $"步驟4 期望 Error/User/PasswordNotMatch，實際 {ErrKeyStr}");
 			var ZhErr = AppI18n.Inst.Get(Err.Type, Err.Args ?? []);
 			T(ZhErr == "登錄名或密碼不正確", $"步驟4 實際 {ZhErr}");
@@ -76,11 +76,11 @@ public partial class TestExampleUsage {
 
 			// ── 步驟 7：外部語言包（JSON）也能併進來 ─────────────────
 			// 譯文由外部工具產生時走這條：I18nJson 攤平成「a/b/c → 模板」，再 AddLang 灌進集合。
-			// 攤平規則與 I18nEntry.BuildKeyStr 一致，故 C# 那套鍵查得到 JSON 那套譯文。
+			// 攤平規則與 I18nDict.KeySep 一致，故 C# 那套鍵查得到 JSON 那套譯文。
 			var JaJson = $$"""
 				{
-					"{{I18nEntry.BuildKeyStr(KeysI18n.Login)}}": "ログイン",
-					"{{I18nEntry.BuildKeyStr(KeysI18n.Welcome__)}}": "{0}さん、ようこそ"
+					"{{KeysI18n.Login.BuildFullPath(I18nDict.KeySep)}}": "ログイン",
+					"{{KeysI18n.Welcome__.BuildFullPath(I18nDict.KeySep)}}": "{0}さん、ようこそ"
 				}
 				""";
 			var JaSet = new I18nSet().AddLang("ja", I18nJson.FromJson(JaJson));

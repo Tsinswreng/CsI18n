@@ -7,7 +7,7 @@ namespace Tsinswreng.CsI18n.Test.Domains.Json;
 #Sum[{{nameof(I18nJson)}} 的測試類。]
 #Descr[
 本庫唯一碰 IO 的地方；攤平規則是「嵌套路徑段用 `/` 連接」，
-必須與 {{nameof(I18nEntry.BuildKeyStr)}} 一致，否則 JSON 語言包與 C# 寫的譯文對不上。
+必須與 {{nameof(I18nDict.KeySep)}} 一致，否則 JSON 語言包與 C# 寫的譯文對不上。
 ]
 """)]
 public partial class TestI18nJson : ITester {

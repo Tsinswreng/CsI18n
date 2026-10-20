@@ -1,4 +1,5 @@
 using Tsinswreng.CsCore;
+using Tsinswreng.CsKeyNode;
 using Tsinswreng.CsTreeTest;
 using Tsinswreng.CsI18n.Test.Utils;
 
@@ -25,11 +26,11 @@ public partial class TestI18nSet {
 			var Key = I18nKey.Mk(null, ["Login"]);
 			var Loaded = new List<str>();
 			var Set = new I18nSet { DfltLang = "zh-CN" }
-				.AddLang("zh-CN", [new I18nEntry(Key, "登錄")]);
+				.AddLang("zh-CN", new Dictionary<str, str> { ["Login"] = "登錄" });
 			Set.LangLoader = Lang => {
 				Loaded.Add(Lang);
 				return new Dictionary<str, str> {
-					[I18nEntry.BuildKeyStr(Key)] = "Logged in",
+					[Key.BuildFullPath(I18nDict.KeySep)] = "Logged in",
 				};
 			};
 			// 還沒切過去，不該去拿。
@@ -49,7 +50,7 @@ public partial class TestI18nSet {
 			var Key = I18nKey.Mk(null, ["Login"]);
 			var Set = new I18nSet { DfltLang = "en" };
 			Set.LangLoader = Lang => new Dictionary<str, str> {
-				[I18nEntry.BuildKeyStr(Key)] = "Logged in",
+				[Key.BuildFullPath(I18nDict.KeySep)] = "Logged in",
 			};
 			T(!Set.HasLang("en"));
 			var Text = Set.Cur.Get(Key);

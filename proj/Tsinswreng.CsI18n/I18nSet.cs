@@ -59,21 +59,7 @@ public class I18nSet {
 	[Doc($$"""
 	加入一個語言。
 	#Prm[{{nameof(Lang)}}][語言代碼，例如 `zh-CN`、`en`。]
-	#Prm[{{nameof(Entries)}}][該語言的全部條目。]
-	#Rtn[自身，便於鏈式加入。]
-	""")]
-	public I18nSet AddLang(str Lang, IEnumerable<I18nEntry> Entries) {
-		Dicts[Lang] = I18nDict.Mk(Entries);
-		if (string.IsNullOrWhiteSpace(DfltLang)) {
-			DfltLang = Lang;
-		}
-		return this;
-	}
-
-	[Doc($$"""
-	加入一個語言（外部來源，例如 JSON 語言包）。
-	#Prm[{{nameof(Lang)}}][語言代碼。]
-	#Prm[{{nameof(Map)}}][鍵 → 模板。]
+	#Prm[{{nameof(Map)}}][鍵 → 模板；C\# 宣告與 JSON 語言包都走這一個入口。]
 	#Rtn[自身，便於鏈式加入。]
 	""")]
 	public I18nSet AddLang(str Lang, IDictionary<str, str> Map) {
@@ -130,7 +116,7 @@ public class I18nSet {
 						"必需鍵清單裡有 null：多半是鍵類的靜態初始化成了循環（分組類初始化時讀了外層類的成員，而外層類初始化又讀分組成員）。"
 					);
 				}
-				var KeyStr = I18nEntry.BuildKeyStr(Key);
+				var KeyStr = Key.BuildFullPath(I18nDict.KeySep);
 				if (string.IsNullOrWhiteSpace(KeyStr)) {
 					throw new ArgumentException($"必需鍵清單裡有鍵的路徑為空：{Key.GetType().Name}");
 				}

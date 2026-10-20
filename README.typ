@@ -6,13 +6,18 @@
 
 	本庫只做這幾件事：
 	- 鍵：`II18nKey : IKeyNode`、`I18nKey`（不再依賴 CsCfg）
-	- 條目：`I18nEntry`（鍵物件 ＋ 模板；鍵直接引用應用宣告的鍵，改名即編譯錯）
-	- 字典：`I18nDict`（重複鍵直接拋；格式化引擎是 `IFormatter` 介面，實現為 ICU MessageFormat）
+	- 字典：`I18nDict`（`FromMap` 吃「鍵 → 模板」；格式化引擎是 `IFormatter` 介面，實現為 ICU MessageFormat）
 	- 多語言集合：`I18nSet`（`AddLang`／`Use`／`Cur`／`Verify` 覆蓋率自檢）
 	- 語言包 JSON：`I18nJson`（讀：嵌套攤平成「鍵 → 模板」；寫：`ToJson`／`SaveFile`，給「構建期生成每語言一個 JSON」用）
+	- 字典鍵規範：`I18nDict.KeySep`（固定 `/`，誰拼字典鍵都用它）
+
+	*不提供「譯文條目」型別*：譯文要怎麼宣告是應用的事。應用想用 `record`、
+	想用字典、想從 JSON 讀都行，只要最後交出「鍵 → 模板」。
+	本庫只認最終形態，不替應用規定宣告期的資料形狀——
+	條目型別擺在應用側還有一個好處：宣告時仍引用鍵物件，鍵改名就編譯錯（見下面示例）。
 
 	*不依賴* CsCfg（鍵模型改用 CsKeyNode）、*不依賴* CsErr（`IErrNode` 本身就是 `IKeyNode`，
-	錯誤鍵可直接查）；運行時也不讀檔——譯文由應用以 `I18nEntry` 提供，
+	錯誤鍵可直接查）；運行時也不讀檔——譯文由應用以「鍵 → 模板」提供，
 	要從外部檔案來就自己讀、再用 `AddLang(lang, map)` 灌進去。
 
 	#H[示例][
@@ -22,14 +27,27 @@
 			public static IList<II18nKey> All = [Login];
 		}
 
+		// 條目型別由應用自己定義（本庫不提供）。
+		public record MsgEntry(IKeyNode Key, str Text){
+			public str KeyStr => Key.BuildFullPath(I18nDict.KeySep);
+		}
+
 		public static class MsgZhCn{
-			public static IList<I18nEntry> Entries = [
+			public static IList<MsgEntry> Entries = [
 				new(KeysI18n.Login, "登錄"),
 			];
 		}
 
+		static IDictionary<str, str> ToMap(IEnumerable<MsgEntry> Entries){
+			var R = new Dictionary<str, str>();
+			foreach(var Entry in Entries){
+				R.Add(Entry.KeyStr, Entry.Text);
+			}
+			return R;
+		}
+
 		public static I18nSet Set { get; } = new I18nSet { DfltLang = "zh-CN" }
-			.AddLang("zh-CN", MsgZhCn.Entries);
+			.AddLang("zh-CN", ToMap(MsgZhCn.Entries));
 
 		II18n I = Set.Cur;          // 或 Set.Use("en")
 		var Text = I[KeysI18n.Login];
@@ -94,7 +112,7 @@
 		- 模板寫壞（`{0`、參數不足）時退回原文而不是拋，界面不會因一條爛文案崩掉
 		- `I18nSet` 的默認語言是第一加入的那個，不會被後來者搶走
 		- `Verify` 的守衛：鍵清單含 null、鍵的路徑為空、某組必鍵是 null、鍵組清單本身是 null
-		- `I18nJson` 攤平規則與 `I18nEntry.BuildKeyStr` 一致（否則 C\# 那套鍵查不到 JSON 那套譯文）
+		- `I18nJson` 攤平規則與 `I18nDict.KeySep` 一致（否則 C\# 那套鍵查不到 JSON 那套譯文）
 	]
 ]
 

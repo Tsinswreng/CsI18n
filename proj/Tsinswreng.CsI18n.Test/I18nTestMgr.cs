@@ -1,7 +1,6 @@
 using Tsinswreng.CsCore;
 using Tsinswreng.CsTreeTest;
 using Tsinswreng.CsI18n.Test.Domains.Dict;
-using Tsinswreng.CsI18n.Test.Domains.Entry;
 using Tsinswreng.CsI18n.Test.Domains.ExampleUsage;
 using Tsinswreng.CsI18n.Test.Domains.Formatter.Icu;
 using Tsinswreng.CsI18n.Test.Domains.Json;
@@ -33,7 +32,6 @@ public class I18nTestMgr : DiEtTestMgr {
 	public override ITestNode RegisterTestsInto(ITestNode? Node) {
 		Node = this.TestNode;
 		this.RegisterTester<TestI18nKey>();
-		this.RegisterTester<TestI18nEntry>();
 		this.RegisterTester<TestI18nDict>();
 		this.RegisterTester<TestIcuFormatter>();
 		this.RegisterTester<TestI18nSet>();
