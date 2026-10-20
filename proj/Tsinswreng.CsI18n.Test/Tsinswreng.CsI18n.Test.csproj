@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- 測試框架用已發佈的 NuGet 版（0.1.1-alpha 這代：DiEtTestMgr + MkTestFnRegister）。 -->
+		<PackageReference Include="Tsinswreng.CsTreeTest" Version="0.1.1-alpha" />
+		<!-- 測試框架本身不依賴依賴注入；入口要用微軟的容器，故由本工程自己引用。 -->
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- 錯誤鍵用 CsErr 造（IErrNode : IKeyNode）。引用本地源碼：NuGet 上的 0.0.1-alpha 還是舊代（IErrNode : ICfgNode）。 -->
+		<ProjectReference Include="../../../Tsinswreng.CsErr/proj/Tsinswreng.CsErr/Tsinswreng.CsErr.csproj" />
+		<ProjectReference Include="../Tsinswreng.CsI18n/Tsinswreng.CsI18n.csproj" />
+	</ItemGroup>
+
+</Project>
+

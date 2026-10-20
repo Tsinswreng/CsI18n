@@ -9,13 +9,11 @@
 	<ItemGroup>
 		<Compile Include="../TypeAlias.cs" />
 		<PackageReference Include="Tsinswreng.CsCore" Version="0.0.1-alpha" />
-		<PackageReference Include="Tsinswreng.CsCfg" Version="0.0.1-alpha" />
-		<PackageReference Include="Tsinswreng.CsErr" Version="0.0.1-alpha" />
-		<!-- <ProjectReference Include="../../../Tsinswreng.CsCfg/proj/Tsinswreng.CsCfg/Tsinswreng.CsCfg.csproj" /> -->
-		<!-- <ProjectReference Include="../../../Tsinswreng.CsErr/proj/Tsinswreng.CsErr/Tsinswreng.CsErr.csproj" /> -->
-		<!-- <ProjectReference Include="../../../Tsinswreng.CsCore/proj/Tsinswreng.CsCore/Tsinswreng.CsCore.csproj" /> -->
-		
+		<!-- 鍵模型改用 KeyNode；不再依賴 CsCfg。
+			 CsErr 從未真正被本庫使用（只有註釋提及），一併移除。 -->
+		<ProjectReference Include="../../../Tsinswreng.CsKeyNode/proj/Tsinswreng.CsKeyNode/Tsinswreng.CsKeyNode.csproj" />
+		<!-- 默認格式化引擎用 ICU MessageFormat（複數／性別／數字與日期樣式），
+			 只有位置參數的簡單場景可換回 string.Format 的實現（見 IFormatter.cs）。 -->
 		<PackageReference Include="MessageFormat" Version="7.1.3" />
 	</ItemGroup>
-
 </Project>
