@@ -18,7 +18,7 @@ public class I18nKey : KeyNode, II18nKey {
 	""")]
 	public static I18nKey Mk(
 		IKeyNode? Parent
-		, IList<str> Path
+		, IReadOnlyList<str> Path
 	) {
 		return new I18nKey {
 			RelaPathSegs = Path,
