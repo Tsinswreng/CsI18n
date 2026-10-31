@@ -35,7 +35,7 @@ public static class I18nJson {
 	""")]
 	public static IDictionary<str, str> Load(Stream Stream) {
 		var Root = JsonNode.Parse(Stream) as JsonObject
-			?? throw new InvalidDataException("語言包根節點必須是 JSON 物件。");
+			?? throw new InvalidDataException("Language pack root must be a JSON object.");
 		var R = new Dictionary<str, str>();
 		Flatten(Root, [], R);
 		return R;
@@ -48,7 +48,7 @@ public static class I18nJson {
 	""")]
 	public static IDictionary<str, str> FromJson(str Json) {
 		var Root = JsonNode.Parse(Json) as JsonObject
-			?? throw new InvalidDataException("語言包根節點必須是 JSON 物件。");
+			?? throw new InvalidDataException("Language pack root must be a JSON object.");
 		var R = new Dictionary<str, str>();
 		Flatten(Root, [], R);
 		return R;

@@ -44,7 +44,7 @@ public partial class TestI18nSet {
 			T(Problems.Count == 1, $"期望一個問題，實際 {Problems.Count}：{str.Join(" | ", Problems)}");
 			// 只有 en 缺 Logout；信息要能直接定位到「哪個語言的哪個鍵」。
 			T(Problems[0].Contains("[en]"), $"信息應帶語言：{Problems[0]}");
-			T(Problems[0].Contains("缺少文案"), $"信息應說明是缺譯：{Problems[0]}");
+			T(Problems[0].Contains("missing translation"), $"信息應說明是缺譯：{Problems[0]}");
 			T(Problems[0].Contains("Logout"), $"信息應帶鍵名：{Problems[0]}");
 			return NIL;
 		});
@@ -57,7 +57,7 @@ public partial class TestI18nSet {
 				.AddLang("en", new Dictionary<str, str> { ["Login"] = "   " });
 			var Problems = Set.Verify([Login]);
 			T(Problems.Count == 1, $"期望一個問題，實際 {Problems.Count}");
-			T(Problems[0].Contains("譯文為空"), $"信息應說明是空譯文：{Problems[0]}");
+			T(Problems[0].Contains("empty translation"), $"信息應說明是空譯文：{Problems[0]}");
 			return NIL;
 		});
 
@@ -81,7 +81,7 @@ public partial class TestI18nSet {
 			var Set = new I18nSet().AddLang("zh-CN", new Dictionary<str, str> { ["Login"] = "登錄" });
 			var Problems = Set.Verify([Login], [ErrKey]);
 			T(Problems.Count == 1, $"期望一個問題，實際 {Problems.Count}");
-			T(Problems[0].Contains("缺少文案"), $"應報缺譯：{Problems[0]}");
+			T(Problems[0].Contains("missing translation"), $"應報缺譯：{Problems[0]}");
 			T(Problems[0].Contains("Error/NotLogin"), $"應報到錯誤鍵：{Problems[0]}");
 			return NIL;
 		});
@@ -95,40 +95,49 @@ public partial class TestI18nSet {
 			return NIL;
 		});
 
-		R("鍵清單裏有 null：直接拋", async Arg => {
-			// null 是代碼錯（多半是鍵類的靜態初始化成了循環），
-			// 放過去的話只會變成一行沒有信息量的「缺少文案：」。
+		R("鍵清單裏有 null：記一條問題，其餘照樣檢查", async Arg => {
+			// null 是代碼錯（多半是鍵類的靜態初始化成了循環），但它不影響其他組的檢查。
+			var Login = I18nKey.Mk(null, ["Login"]);
 			var Set = new I18nSet().AddLang("en", new Dictionary<str, str>());
 			// 顯式宣告成鍵陣列：若直接寫 `Verify([null])`，
 			// 編譯器會把它當成「一組本身是 null」，測到的就不是這條守衛了。
 			IKeyNode?[] Group = [null];
-			T(Chk.Throws<ArgumentException>(() => Set.Verify(Group!)));
+			var Problems = Set.Verify(Group!, [Login]);
+			T(Problems.Count == 2, $"期望兩條問題（null 鍵 ＋ 缺譯），實際 {Problems.Count}：{str.Join(" | ", Problems)}");
+			T(Problems[0].Contains("null key"), $"第一條應指出 null 鍵：{Problems[0]}");
+			T(Problems[1].Contains("Login"), $"第二條應是繼續檢查出來的缺譯：{Problems[1]}");
 			return NIL;
 		});
 
-		R("必需鍵組本身是 null：直接拋", async Arg => {
-			// 少寫一組鍵時很容易傳成 Verify(GroupA, null)；
-			// 這也屬代碼錯，不該以 NullReferenceException 的形式炸出來。
+		R("必需鍵組本身是 null：記一條問題，其餘照樣檢查", async Arg => {
+			// 少寫一組鍵時很容易傳成 Verify(GroupA, null)；這也屬代碼錯，但不該中斷整次自檢。
 			var Login = I18nKey.Mk(null, ["Login"]);
 			var Set = new I18nSet().AddLang("en", new Dictionary<str, str>());
 			IEnumerable<IKeyNode> Good = [Login];
 			IEnumerable<IKeyNode>[] Groups = [Good, null!];
-			T(Chk.Throws<ArgumentException>(() => Set.Verify(Groups)));
+			var Problems = Set.Verify(Groups);
+			T(Problems.Count == 2, $"期望兩條問題（null 組 ＋ 缺譯），實際 {Problems.Count}：{str.Join(" | ", Problems)}");
+			T(Problems.Any(x => x.Contains("null")), $"應有一條指出 null 組：{str.Join(" | ", Problems)}");
+			T(Problems.Any(x => x.Contains("Login")), $"應有一條是繼續檢查出來的缺譯：{str.Join(" | ", Problems)}");
 			return NIL;
 		});
 
-		R("必需鍵組清單本身是 null：直接拋", async Arg => {
-			// 上游變數忘了賦值時會走到這裏。
+		R("必需鍵組清單本身是 null：回一條問題", async Arg => {
+			// 上游變數忘了賦值時會走到這裏；沒有東西可檢查，但仍要讓人看見原因。
 			var Set = new I18nSet().AddLang("en", new Dictionary<str, str>());
-			T(Chk.Throws<ArgumentException>(() => Set.Verify(null!)));
+			var Problems = Set.Verify(null!);
+			T(Problems.Count == 1, $"期望一條問題，實際 {Problems.Count}");
+			T(Problems[0].Contains("null"), $"應說明清單本身是 null：{Problems[0]}");
 			return NIL;
 		});
 
-		R("鍵的路徑為空：直接拋", async Arg => {
+		R("鍵的路徑為空：記一條問題", async Arg => {
 			// 路徑為空的鍵在字典裏就是空字符串鍵，查得到也翻不到，屬代碼錯。
 			var EmptyPath = I18nKey.Mk(null, []);
 			var Set = new I18nSet().AddLang("en", new Dictionary<str, str>());
-			T(Chk.Throws<ArgumentException>(() => Set.Verify([EmptyPath])));
+			var Problems = Set.Verify([EmptyPath]);
+			T(Problems.Count == 1, $"期望一條問題，實際 {Problems.Count}");
+			T(Problems[0].Contains("empty path"), $"應說明鍵的路徑為空：{Problems[0]}");
 			return NIL;
 		});
 	}

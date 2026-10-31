@@ -21,7 +21,9 @@ public class I18nSet {
 		get {
 			if (_Cur is null) {
 				if (string.IsNullOrWhiteSpace(DfltLang)) {
-					throw new InvalidOperationException("尚未加入任何語言");
+					throw new InvalidOperationException(
+						$"No language has been added. Add a language, or set {nameof(DfltLang)} and {nameof(LangLoader)}."
+					);
 				}
 				Use(DfltLang);
 			}
@@ -79,7 +81,10 @@ public class I18nSet {
 		// step 1：語言不在就先問載入器要（每種語言一個語言包時，這裡才真的讀檔）。
 		if (!Dicts.ContainsKey(Lang)) {
 			if (LangLoader is null) {
-				throw new ArgumentException($"未提供語言：{Lang}");
+				throw new ArgumentException(
+					$"Language is not available: {Lang}. Add it, or set {nameof(LangLoader)} so it can be loaded on demand.",
+					nameof(Lang)
+				);
 			}
 			AddLang(Lang, LangLoader(Lang));
 		}
@@ -93,32 +98,36 @@ public class I18nSet {
 
 	檢查「必需鍵缺譯」與「譯文為空」。
 	不檢查「多出來的鍵」——那是允許的（例如錯誤文案不必列入必需鍵）。
+
+	*一次報完，不在第一處就中斷*：null 鍵組、null 鍵、空路徑鍵都只是各記一條問題，
+	其餘各組照樣檢查。故回傳的清單可能同時含「代碼錯」與「漏譯」兩類，
+	呼叫方看完整份清單再決定怎麼處理，而不是修一條、跑一次、再撞下一條。
+
 	#Prm[{{nameof(Groups)}}][必需鍵，可傳多組（例如界面文案鍵一組、錯誤鍵一組）。]
 	#Rtn[問題列表；空表示沒問題。]
-	#Throw[{{nameof(ArgumentException)}}][鍵清單裡有 null、某組本身是 null、或鍵組清單本身是 null 時——那是代碼錯，不是漏譯。]
 	""")]
 	public IList<str> Verify(params IEnumerable<IKeyNode>[] Groups) {
-		if (Groups is null) {
-			// `Verify(null)` 這種呼叫幾乎都是上游變數忘了賦值，直接說清楚比 NRE 好查。
-			throw new ArgumentException("必需鍵組清單本身是 null。");
-		}
 		var R = new List<str>();
 		var Required = new HashSet<str>();
+		var GroupIdx = -1;
 		foreach (var Group in Groups) {
+			GroupIdx++;
+			// 一組有問題不影響其他組的檢查，故記一條就往下走。
 			if (Group is null) {
-				// 少寫一組鍵時很容易傳成 `Verify(GroupA, null)`；直接說清楚，別讓它變成 NullReferenceException。
-				throw new ArgumentException("必需鍵組裡有 null：請確認每組鍵清單都已建立。");
+				// 少寫一組鍵時很容易傳成 `Verify(GroupA, null)`。
+				R.Add($"Required key group {GroupIdx} is null.");
+				continue;
 			}
 			foreach (var Key in Group) {
 				if (Key is null) {
-					// 靜態初始化順序出錯時，鍵清單會拿到一堆 null；不報錯的話只會變成「缺少文案：」這種沒有信息量的行。
-					throw new ArgumentException(
-						"必需鍵清單裡有 null：多半是鍵類的靜態初始化成了循環（分組類初始化時讀了外層類的成員，而外層類初始化又讀分組成員）。"
-					);
+					// 靜態初始化順序出錯時，鍵清單會拿到一堆 null；放過去只會變成「缺少文案：」這種沒有信息量的行。
+					R.Add($"Required key group {GroupIdx} contains a null key. This usually means a static initialisation cycle in the key class: a group class read a member of the outer class while the outer class was reading the group members.");
+					continue;
 				}
 				var KeyStr = Key.BuildFullPath(I18nDict.KeySep);
 				if (string.IsNullOrWhiteSpace(KeyStr)) {
-					throw new ArgumentException($"必需鍵清單裡有鍵的路徑為空：{Key.GetType().Name}");
+					R.Add($"Required key group {GroupIdx} contains a key with an empty path: {Key.GetType().Name}");
+					continue;
 				}
 				Required.Add(KeyStr);
 			}
@@ -126,12 +135,12 @@ public class I18nSet {
 		foreach (var Pair in Dicts) {
 			foreach (var Key in Required) {
 				if (!Pair.Value.Map.ContainsKey(Key)) {
-					R.Add($"[{Pair.Key}] 缺少文案：{Key}");
+					R.Add($"[{Pair.Key}] missing translation: {Key}");
 				}
 			}
 			foreach (var Item in Pair.Value.Map) {
 				if (string.IsNullOrWhiteSpace(Item.Value)) {
-					R.Add($"[{Pair.Key}] 譯文為空：{Item.Key}");
+					R.Add($"[{Pair.Key}] empty translation: {Item.Key}");
 				}
 			}
 		}
