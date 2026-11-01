@@ -75,4 +75,29 @@ public class I18nDict : II18n {
 		// 鍵的唯一性由 IDictionary 本身保證，這裏不必再檢查一次。
 		return new I18nDict { Map = new Dictionary<str, str>(Map) };
 	}
+
+	[Doc($$"""
+	由一個 {{nameof(ILang)}} 建字典。
+
+	*為何要這一層*：{{nameof(ILang)}} 的鍵是任意的（C\# 宣告時是鍵物件，從 JSON 讀回來時是字符串），
+	而本字典的查表鍵固定是「用 {nameof(KeySep)} 串起來的路徑」。這一步負責把兩者對齊，
+	呼叫方因此不必自己判別鍵的型別。
+
+	*鍵物件的路徑由誰算*：`IKeyNode.BuildFullPath`，
+	與 {{nameof(Get)}} 查表時用的算法是同一個，故兩邊不可能算出不同的鍵。
+	#Prm[{{nameof(Lang)}}][語言；鍵可以是鍵物件、字符串，或任何有 `ToString` 的值。]
+	#Rtn[本字典；鍵已規範化。]
+	""")]
+	public static I18nDict FromLang(ILang Lang) {
+		var Map = new Dictionary<str, str>();
+		foreach (var Pair in Lang) {
+			var KeyStr = Pair.Key switch {
+				IKeyNode Key => Key.BuildFullPath(KeySep),
+				str S => S,
+				_ => Pair.Key?.ToString() ?? "",
+			};
+			Map[KeyStr] = Pair.Value?.ToString() ?? "";
+		}
+		return new I18nDict { Map = Map };
+	}
 }

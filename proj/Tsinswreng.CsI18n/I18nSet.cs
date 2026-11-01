@@ -70,6 +70,23 @@ public class I18nSet {
 		}
 		return this;
 	}
+
+	[Doc($$"""
+	加入一個 {{nameof(ILang)}}。
+
+	*為何要有這一條*：應用宣告譯文時用的是鍵物件（改名會編譯錯），
+	從 JSON 讀回來時鍵是字符串。{{nameof(ILang)}} 讓兩種來源共用同一個型別，
+	鍵的規範化交給 {{nameof(I18nDict.FromLang)}}，本集合不必知道鍵是哪一種。
+	#Prm[{{nameof(Lang)}}][語言；{{nameof(ILang.Code)}} 即字典代碼。]
+	#Rtn[自身，便於鏈式加入。]
+	""")]
+	public I18nSet AddLang(ILang Lang) {
+		Dicts[Lang.Code] = I18nDict.FromLang(Lang);
+		if (string.IsNullOrWhiteSpace(DfltLang)) {
+			DfltLang = Lang.Code;
+		}
+		return this;
+	}
 	[Doc($$"""
 	切換當前語言。
 	#Prm[{{nameof(Lang)}}][語言代碼。]
