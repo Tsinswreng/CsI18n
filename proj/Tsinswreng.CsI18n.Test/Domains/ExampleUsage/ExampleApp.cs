@@ -38,17 +38,6 @@ public static class KeysI18n {
 
 	[Doc("「歡迎，{0}」。結尾 `__` 對應一個位置參數。")]
 	public static I18nKey Welcome__ = Mk1(nameof(Welcome__));
-
-	[Doc($$"""
-	#Sum[全部界面文案鍵。]
-	#Descr[
-	NativeAOT 下不能反射列舉靜態欄位，而覆蓋率自檢需要知道全集，故手寫這份清單。
-	新增鍵時同步加進來：漏了不會編譯錯，但 {{nameof(I18nSet.Verify)}} 就檢查不到它。
-	]
-	""")]
-	public static IList<II18nKey> All = [
-		AppTitle, Login, Logout, Welcome__,
-	];
 }
 
 [Doc($$"""
@@ -59,9 +48,8 @@ public static class KeysI18n {
 `NotLogin` 的字典鍵是 `Error/User/NotLogin`，錯誤鍵**不必另立一份文案鍵**，譯文直接掛在同一個鍵上。
 而且它可以直接拋：`throw {{nameof(KeysErr)}}.{{nameof(KeysErr.User)}}.{{nameof(KeysErr.User.PasswordNotMatch)}}.ToErr()`。
 
-*根為甚麼另立 {{nameof(ErrRoot)}} 這個類型*：若根是外層類的成員，分組類初始化時讀它就會觸發外層類初始化，
-而外層類初始化又要讀 {{nameof(KeysErr.All)}}（內含分組成員）——此時分組類正在初始化中，CLR 不重入，
-成員仍是 null，{{nameof(KeysErr.All)}} 便永久帶著 null。
+*根為甚麼另立 {{nameof(ErrRoot)}} 這個類型*：根不長在外層類身上，
+分組類初始化時就不會因為讀根而觸發外層類初始化，兩邊互不牽扯。
 ]
 """)]
 public static class ErrRoot {
@@ -90,12 +78,6 @@ public static class KeysErr {
 		[Doc("身份或密碼不正確。刻意不區分「用戶不存在」與「密碼錯誤」：分開會讓攻擊者能枚舉賬號。")]
 		public static K PasswordNotMatch = Mk(_R, [nameof(PasswordNotMatch)]);
 	}
-
-	[Doc("全部錯誤鍵；同樣是給覆蓋率自檢用的全集。")]
-	public static IList<K> All = [
-		Common.UnknownErr,
-		User.NotLogin, User.PasswordNotMatch,
-	];
 }
 
 [Doc($$"""
@@ -129,7 +111,7 @@ public static class MsgZhCn {
 	];
 }
 
-[Doc("英文譯文。條目與中文一一對應——缺一條 {{nameof(I18nSet.Verify)}} 就會報出來。")]
+[Doc("英文譯文。條目與中文一一對應——少一條 {{nameof(I18nSet.Verify)}} 就會報出來。")]
 public static class MsgEn {
 	[Doc("本語言的全部條目。")]
 	public static IList<MsgEntry> Entries = [

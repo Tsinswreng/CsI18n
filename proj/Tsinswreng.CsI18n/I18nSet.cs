@@ -1,7 +1,6 @@
 namespace Tsinswreng.CsI18n;
 
 using Tsinswreng.CsCore;
-using Tsinswreng.CsKeyNode;
 
 [Doc($$"""
 多語言集合：語言代碼 → 字典，並記住「當前語言」。
@@ -94,46 +93,41 @@ public class I18nSet {
 	}
 
 	[Doc($$"""
-	覆蓋率自檢：逐語言比對「必需鍵」與實際提供的條目。
+	覆蓋率自檢：語言之間互相比對，找出缺譯與空譯文。
 
-	檢查「必需鍵缺譯」與「譯文為空」。
-	不檢查「多出來的鍵」——那是允許的（例如錯誤文案不必列入必需鍵）。
+	*不收任何鍵清單*：必檢鍵就是「所有語言已經提供的鍵」的聯集。
+	語言包本身就是事實源，故不需要、也不允許呼叫方另外維護一份鍵清單——
+	那種清單要人跟著改，漏改不會編譯錯，還會讓自檢靜默漏掉那條，
+	表面上有檢查、實際上檢查不到。任何手寫的 `All` 清單都因此退場。
 
-	*一次報完，不在第一處就中斷*：null 鍵組、null 鍵、空路徑鍵都只是各記一條問題，
-	其餘各組照樣檢查。故回傳的清單可能同時含「代碼錯」與「漏譯」兩類，
-	呼叫方看完整份清單再決定怎麼處理，而不是修一條、跑一次、再撞下一條。
+	*檢查什麼*：某鍵在 A 語言有、B 語言沒有（缺譯）；某語言的譯文是空白（等於沒翻）。
+	*不檢查什麼*：某鍵在所有語言都沒有。這種「代碼宣告了鍵、卻沒有任何語言翻它」
+	看不清語言包，聯集裏根本沒有它。要抓這種洞得拿代碼側的鍵集合來對照，
+	那是構建期工具的事（反射鍵類、或源生成），不是本集合能自己知道的事實。
 
-	#Prm[{{nameof(Groups)}}][必需鍵，可傳多組（例如界面文案鍵一組、錯誤鍵一組）。]
+	*一次報完，不在第一處就中斷*：所有問題收進清單一次交回，
+	呼叫方看完整份再決定怎麼處理，而不是修一條、跑一次、再撞下一條。
 	#Rtn[問題列表；空表示沒問題。]
 	""")]
-	public IList<str> Verify(params IEnumerable<IKeyNode>[] Groups) {
+	public IList<str> Verify() {
 		var R = new List<str>();
-		var Required = new HashSet<str>();
-		var GroupIdx = -1;
-		foreach (var Group in Groups) {
-			GroupIdx++;
-			// 一組有問題不影響其他組的檢查，故記一條就往下走。
-			if (Group is null) {
-				// 少寫一組鍵時很容易傳成 `Verify(GroupA, null)`。
-				R.Add($"Required key group {GroupIdx} is null.");
-				continue;
-			}
-			foreach (var Key in Group) {
-				if (Key is null) {
-					// 靜態初始化順序出錯時，鍵清單會拿到一堆 null；放過去只會變成「缺少文案：」這種沒有信息量的行。
-					R.Add($"Required key group {GroupIdx} contains a null key. This usually means a static initialisation cycle in the key class: a group class read a member of the outer class while the outer class was reading the group members.");
-					continue;
-				}
-				var KeyStr = Key.BuildFullPath(I18nDict.KeySep);
-				if (string.IsNullOrWhiteSpace(KeyStr)) {
-					R.Add($"Required key group {GroupIdx} contains a key with an empty path: {Key.GetType().Name}");
-					continue;
-				}
-				Required.Add(KeyStr);
+		if (Dicts.Count == 0) {
+			// 沒有任何語言時回空清單會被讀成「檢查通過」，那是比報錯更壞的結果。
+			R.Add("No language has been added; nothing was verified.");
+			return R;
+		}
+
+		// step 1：先取聯集。所有語言提供的鍵合起來，就是「應該有哪些」的定義。
+		var AllKeys = new HashSet<str>();
+		foreach (var Pair in Dicts) {
+			foreach (var Key in Pair.Value.Map.Keys) {
+				AllKeys.Add(Key);
 			}
 		}
+
+		// step 2：逐語言比對。缺譯按鍵報，空譯文按語言自己的條目報。
 		foreach (var Pair in Dicts) {
-			foreach (var Key in Required) {
+			foreach (var Key in AllKeys) {
 				if (!Pair.Value.Map.ContainsKey(Key)) {
 					R.Add($"[{Pair.Key}] missing translation: {Key}");
 				}

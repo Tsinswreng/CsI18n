@@ -51,14 +51,15 @@
 
 		II18n I = Set.Cur;          // 或 Set.Use("en")
 		var Text = I[KeysI18n.Login];
-		foreach(var Problem in Set.Verify(KeysI18n.All)) { /* 缺譯／空譯文 */ }
+		foreach(var Problem in Set.Verify()) { /* 缺譯／空譯文 */ }
 		```
 
-		錯誤鍵也一樣能查（`IErrNode : IKeyNode`，鍵路徑形如 `Error/User/NotLogin`）；
-		自檢可一次傳多組必需鍵，界面文案與錯誤文案分開登記：
+		錯誤鍵也一樣能查（`IErrNode : IKeyNode`，鍵路徑形如 `Error/User/NotLogin`）。
+		自檢不收任何鍵清單：必檢鍵就是所有語言已提供鍵的聯集，界面文案與錯誤文案不必分開登記，
+		因為語言包本身已經把它們都列出來了：
 
 		```cs
-		foreach(var Problem in Set.Verify(KeysI18n.All, KeysErr.All)){ /* … */ }
+		foreach(var Problem in Set.Verify()){ /* … */ }
 		```
 
 		外部語言包（譯文不由 C\# 產生時）：
@@ -77,8 +78,8 @@
 		+ 讀：`I18nJson.LoadFile(path)`
 		+ 按需：`I18nSet.LangLoader`——`Use(lang)`／`Cur` 發現語言還沒加入就調它去載入；
 		`HasLang(lang)` 查是否已載入
-		+ 自檢：`Verify(...)` 要「所有語言都在手裡」，故這種檢查屬於構建期工具或測試，
-		不是執行時（執行時只看得到當前語言）
+		+ 自檢：`Verify()` 要「所有語言都在手裡」，故這種檢查屬於構建期工具或測試，
+		不是執行時（執行時只看得到當前語言）。它不收鍵清單，直接拿語言包互相比對
 
 		```cs
 		var Set = new I18nSet{ DfltLang = "zh-CN" };
@@ -111,7 +112,7 @@
 		- `Get` 無參數時不填模板、也不驚動自訂 `IFormatter`
 		- 模板寫壞（`{0`、參數不足）時退回原文而不是拋，界面不會因一條爛文案崩掉
 		- `I18nSet` 的默認語言是第一加入的那個，不會被後來者搶走
-		- `Verify` 的守衛：鍵清單含 null、鍵的路徑為空、某組必鍵是 null、鍵組清單本身是 null
+		- `Verify` 不收鍵清單：必檢鍵是各語言已提供鍵的聯集；沒有任何語言時報一條而不是假裝通過
 		- `I18nJson` 攤平規則與 `I18nDict.KeySep` 一致（否則 C\# 那套鍵查不到 JSON 那套譯文）
 	]
 ]

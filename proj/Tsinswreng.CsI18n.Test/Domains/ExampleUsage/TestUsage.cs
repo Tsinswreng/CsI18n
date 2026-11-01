@@ -69,9 +69,9 @@ public partial class TestExampleUsage {
 			T(MissingText == "NotTranslatedYet", $"步驟5 期望鍵名，實際 {MissingText}");
 
 			// ── 步驟 6：啟動時跑覆蓋率自檢 ───────────────────────────
-			// 這是本庫最有價值的一條：界面文案鍵一組、錯誤鍵一組，
-			// 看看每個語言是否都翻了、有沒有翻成空白。真實項目在 DI 裝配處跑一次並記日誌。
-			var Problems = AppI18n.Set.Verify(KeysI18n.All, KeysErr.All);
+			// 這是本庫最有價值的一條：不收任何鍵清單，必檢鍵就是所有語言已提供鍵的聯集，
+			// 看看每個語言是否都翻齊、有沒有翻成空白。真實項目在構建期工具或測試裏跑一次。
+			var Problems = AppI18n.Set.Verify();
 			T(Problems.Count == 0, $"步驟6 示例應全部翻齊，實際 {Problems.Count} 個問題：{str.Join(" | ", Problems)}");
 
 			// ── 步驟 7：外部語言包（JSON）也能併進來 ─────────────────
